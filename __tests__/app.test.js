@@ -35,6 +35,22 @@ describe('recipe-lab routes', () => {
       });
   });
 
+  it.only('should get a recipe by an id', async() => {
+    const recipes = await Promise.all([
+      { name: 'cookies', directions: [] },
+      { name: 'cake', directions: [] },
+      { name: 'pie', directions: [] }
+    ].map(recipe => Recipe.insert(recipe)));
+
+    console.log(recipes[0].id);
+
+    return request(app)
+      .get('/api/v1/recipes/1')
+      .then(res => {
+        expect(res.body).toEqual({ name: 'cookies', directions: [], id: '1' });
+      });
+  });
+
   it('gets all recipes', async() => {
     const recipes = await Promise.all([
       { name: 'cookies', directions: [] },
