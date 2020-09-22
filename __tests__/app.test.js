@@ -3,6 +3,7 @@ const pool = require('../lib/utils/pool');
 const request = require('supertest');
 const app = require('../lib/app');
 const Recipe = require('../lib/models/recipe');
+const Log = require('../lib/models/log');
 
 describe('log routes', () => {
   beforeEach(() => {
@@ -19,6 +20,26 @@ describe('log routes', () => {
         rating: 5
       })
       .then(res => expect(res.body).toEqual({ id: '1', recipeId: 1, dateOfEvent: '05/17/1996', notes: 'best day on earth', rating: 5 }));
+  });
+
+  it('should get a log by id', async() => {
+    const allLogs = await Promise.all([
+      Log.insert({
+        recipeId: 1, dateOfEvent: '05/17/1996', notes: 'best day on earth', rating: 5
+      }),
+      Log.insert({
+        recipeId: 2, dateOfEvent: 'another day', notes: 'the 3rd event', rating: 5
+      }),
+      Log.insert({
+        recipeId: 3, dateOfEvent: 'the last day', notes: 'this recipe is quite bad', rating: 5
+      }),
+    ]);
+
+    const firstInsertedLog = allLogs[0];
+
+    return request(app)
+      .get(`/api/v1/logs/${firstInsertedLog.id}`)
+      .then(res => expect(res.body).toEqual(firstInsertedLog));
   });
 
 });
