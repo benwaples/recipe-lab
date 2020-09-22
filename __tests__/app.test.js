@@ -4,6 +4,26 @@ const request = require('supertest');
 const app = require('../lib/app');
 const Recipe = require('../lib/models/recipe');
 
+describe('log routes', () => {
+  beforeEach(() => {
+    return pool.query(fs.readFileSync('./sql/setup.sql', 'utf-8'));
+  });
+
+  it('add a log to the data base', () => {
+    return request(app)
+      .post('/api/v1/logs')
+      .send({
+        recipeId: 1,
+        dateOfEvent: '05/17/1996',
+        notes: 'best day on earth',
+        rating: 5
+      })
+      .then(res => expect(res.body).toEqual({ id: '1', recipeId: 1, dateOfEvent: '05/17/1996', notes: 'best day on earth', rating: 5 }));
+  });
+
+});
+
+
 describe('recipe-lab routes', () => {
   beforeEach(() => {
     return pool.query(fs.readFileSync('./sql/setup.sql', 'utf-8'));
