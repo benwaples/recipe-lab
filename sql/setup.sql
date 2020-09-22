@@ -8,7 +8,8 @@ CREATE TABLE recipes (
 );
 
 CREATE TABLE logs (
-  recipe_id BIGINT GENERATED ALWAYS AS IDENTITY,
+  id BIGINT GENERATED ALWAYS AS IDENTITY,
+  recipe_id INT NOT NULL,
   date_of_event TEXT NOT NULL,
   notes TEXT NOT NULL,
   rating INT NOT NULL
