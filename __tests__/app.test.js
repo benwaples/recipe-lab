@@ -112,7 +112,7 @@ describe('recipe-lab routes', () => {
     await request(app)
       .delete(`/api/v1/recipes/${allRecipesInserted[0].id}`)
       .then(res => {
-        expect(res.body).toEqual({ name: 'cookies', directions: [], id: '1' });
+        expect(res.body).toEqual({ name: 'cookies', directions: [], id: allRecipesInserted[0].id });
       });
 
     return request(app)
