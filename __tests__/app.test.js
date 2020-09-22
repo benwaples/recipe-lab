@@ -35,14 +35,13 @@ describe('recipe-lab routes', () => {
       });
   });
 
-  it.only('should get a recipe by an id', async() => {
-    const recipes = await Promise.all([
+  it('should get a recipe by an id', async() => {
+    await Promise.all([
       { name: 'cookies', directions: [] },
       { name: 'cake', directions: [] },
       { name: 'pie', directions: [] }
     ].map(recipe => Recipe.insert(recipe)));
 
-    console.log(recipes[0].id);
 
     return request(app)
       .get('/api/v1/recipes/1')
@@ -101,5 +100,27 @@ describe('recipe-lab routes', () => {
           ]
         });
       });
+  });
+
+  it('should delete a recipe when given an idea', async() => {
+    const allRecipesInserted = await Promise.all([
+      { name: 'cookies', directions: [] },
+      { name: 'cake', directions: [] },
+      { name: 'pie', directions: [] }
+    ].map(recipe => Recipe.insert(recipe)));
+
+    await request(app)
+      .delete(`/api/v1/recipes/${allRecipesInserted[0].id}`)
+      .then(res => {
+        expect(res.body).toEqual({ name: 'cookies', directions: [], id: '1' });
+      });
+
+    return request(app)
+      .get(`/api/v1/recipes/${allRecipesInserted[0].id}`)
+      .then(res => {
+        expect(res.body).toEqual({});
+      });
+    
+
   });
 });
