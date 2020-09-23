@@ -10,7 +10,7 @@ describe('log routes', () => {
     return pool.query(fs.readFileSync('./sql/setup.sql', 'utf-8'));
   });
 
-  it.only('add a log to the data base', () => {
+  it('add a log to the data base', () => {
     return request(app)
       .post('/api/v1/logs')
       .send({
@@ -61,27 +61,17 @@ describe('log routes', () => {
       .then(res => expect(res.body).toEqual(expect.arrayContaining(allLogs)));
   });
 
-  it.skip('should update a log based on the id', async() => {
-    const allLogs = await Promise.all([
-      Log.insert({
-        recipeId: 1, dateOfEvent: '05/17/1996', notes: 'best day on earth', rating: 5
-      }),
-      Log.insert({
-        recipeId: 2, dateOfEvent: 'another day', notes: 'the 3rd event', rating: 5
-      }),
-      Log.insert({
-        recipeId: 3, dateOfEvent: 'the last day', notes: 'this recipe is quite bad', rating: 5
-      }),
-    ]);
-
-    const firstInsertedLog = allLogs[0];
+  it.only('should update a log based on the id', async() => {
+    const log = await Log.insert({
+      recipeId: 1, dateOfEvent: '05/17/1996', notes: 'best day on earth', rating: 5, ingredients: '{ "amount": 1, "measurement": "teaspoon", "ingredient": "salt" }'
+    });
 
     return request(app)
-      .put(`/api/v1/logs/${firstInsertedLog.id}`)
+      .put(`/api/v1/logs/${log.id}`)
       .send({ 
-        recipeId: firstInsertedLog.recipeId, dateOfEvent: '05/17/1996', notes: 'just an okay day', rating: 6 
+        recipeId: 1, dateOfEvent: '05/17/1996', notes: 'just an okay day', rating: 6, ingredients: '{ "amount": 1, "measurement": "teaspoon", "ingredient": "salt" }'
       })
-      .then(res => expect(res.body).toEqual({ id: firstInsertedLog.id, recipeId: firstInsertedLog.recipeId, dateOfEvent: '05/17/1996', notes: 'just an okay day', rating: 6 }));
+      .then(res => expect(res.body).toEqual({ id: log.id, recipeId: log.recipeId, dateOfEvent: '05/17/1996', notes: 'just an okay day', rating: 6, ingredients: { amount: 1, measurement: 'teaspoon', ingredient: 'salt' } }));
   });
 
   it('should delete a log by id', async() => {
