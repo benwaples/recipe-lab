@@ -10,16 +10,17 @@ describe('log routes', () => {
     return pool.query(fs.readFileSync('./sql/setup.sql', 'utf-8'));
   });
 
-  it('add a log to the data base', () => {
+  it.only('add a log to the data base', () => {
     return request(app)
       .post('/api/v1/logs')
       .send({
         recipeId: 1,
         dateOfEvent: '05/17/1996',
         notes: 'best day on earth',
-        rating: 5
+        rating: 5,
+        ingredients: '{ "amount": 1, "measurement": "teaspoon", "ingredient": "salt" }'
       })
-      .then(res => expect(res.body).toEqual({ id: '1', recipeId: 1, dateOfEvent: '05/17/1996', notes: 'best day on earth', rating: 5 }));
+      .then(res => expect(res.body).toEqual({ id: '1', recipeId: 1, dateOfEvent: '05/17/1996', notes: 'best day on earth', rating: 5, ingredients: { amount: 1, measurement: 'teaspoon', ingredient: 'salt' } }));
   });
 
   it('should get a log by id', async() => {
@@ -42,6 +43,66 @@ describe('log routes', () => {
       .then(res => expect(res.body).toEqual(firstInsertedLog));
   });
 
+  it('should return all logs', async() => {
+    const allLogs = await Promise.all([
+      Log.insert({
+        recipeId: 1, dateOfEvent: '05/17/1996', notes: 'best day on earth', rating: 5
+      }),
+      Log.insert({
+        recipeId: 2, dateOfEvent: 'another day', notes: 'the 3rd event', rating: 5
+      }),
+      Log.insert({
+        recipeId: 3, dateOfEvent: 'the last day', notes: 'this recipe is quite bad', rating: 5
+      }),
+    ]);
+
+    return request(app)
+      .get('/api/v1/logs')
+      .then(res => expect(res.body).toEqual(expect.arrayContaining(allLogs)));
+  });
+
+  it.skip('should update a log based on the id', async() => {
+    const allLogs = await Promise.all([
+      Log.insert({
+        recipeId: 1, dateOfEvent: '05/17/1996', notes: 'best day on earth', rating: 5
+      }),
+      Log.insert({
+        recipeId: 2, dateOfEvent: 'another day', notes: 'the 3rd event', rating: 5
+      }),
+      Log.insert({
+        recipeId: 3, dateOfEvent: 'the last day', notes: 'this recipe is quite bad', rating: 5
+      }),
+    ]);
+
+    const firstInsertedLog = allLogs[0];
+
+    return request(app)
+      .put(`/api/v1/logs/${firstInsertedLog.id}`)
+      .send({ 
+        recipeId: firstInsertedLog.recipeId, dateOfEvent: '05/17/1996', notes: 'just an okay day', rating: 6 
+      })
+      .then(res => expect(res.body).toEqual({ id: firstInsertedLog.id, recipeId: firstInsertedLog.recipeId, dateOfEvent: '05/17/1996', notes: 'just an okay day', rating: 6 }));
+  });
+
+  it('should delete a log by id', async() => {
+    const allLogs = await Promise.all([
+      Log.insert({
+        recipeId: 1, dateOfEvent: '05/17/1996', notes: 'best day on earth', rating: 5
+      }),
+      Log.insert({
+        recipeId: 2, dateOfEvent: 'another day', notes: 'the 3rd event', rating: 5
+      }),
+      Log.insert({
+        recipeId: 3, dateOfEvent: 'the last day', notes: 'this recipe is quite bad', rating: 5
+      }),
+    ]);
+
+    const firstInsertedLog = allLogs[0];
+
+    return request(app)
+      .delete(`/api/v1/logs/${firstInsertedLog.id}`)
+      .then(deletedLog => expect(deletedLog.body).toEqual(firstInsertedLog));
+  });
 });
 
 
@@ -77,17 +138,17 @@ describe('recipe-lab routes', () => {
   });
 
   it('should get a recipe by an id', async() => {
-    await Promise.all([
+    const allRecipes = await Promise.all([
       { name: 'cookies', directions: [] },
       { name: 'cake', directions: [] },
       { name: 'pie', directions: [] }
     ].map(recipe => Recipe.insert(recipe)));
 
-
+    const firstInsertedRecipe = allRecipes[0];
     return request(app)
-      .get('/api/v1/recipes/1')
+      .get(`/api/v1/recipes/${firstInsertedRecipe.id}`)
       .then(res => {
-        expect(res.body).toEqual({ name: 'cookies', directions: [], id: '1' });
+        expect(res.body).toEqual({ name: firstInsertedRecipe.name, directions: [], id: firstInsertedRecipe.id });
       });
   });
 
